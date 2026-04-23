@@ -41,13 +41,8 @@ Halley's orbital period through distinct mechanisms:
 ```
 halley_1151_replication.py      Main replication battery (all paper results)
 test_phase_locked_permutation.py Phase-locked permutation test (p=0.035)
-test_gravitational_impulse.py   Direct gravitational impulse test
-test_saturn_proximity_permutation.py Saturn proximity permutation (extended)
-test_perturbation_correlation.py Chirikov-phase correlation + cancellation
 rebound_halley.py               N-body ensemble (requires REBOUND)
 rebound_stabilization.py        Long-term stabilization test (requires REBOUND)
-tstar_population.py             T* divisor analysis — HTC population
-tstar_asteroids.py              T* divisor analysis — asteroid belt
 README.md                       This file
 ```
 
