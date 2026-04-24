@@ -375,89 +375,85 @@ def fig6():
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# FIGURE 5 — Rolling prediction: scatter of errors
+# FIGURE 5 — Rolling prediction: temporal error series
+#
+# x-axis : observed perihelion year as decimal (e.g. "1910.3")
+# y-axis : prediction error in years (predicted - observed)
+# Two series: running mean of all prior periods vs fixed T*/15
+# Warm-up: first 3 apparitions (forecasts from apparition 4 onward)
 # ═══════════════════════════════════════════════════════════════════════════════
 
 def fig5():
     T15_days = P_EXACT * JD_PER_YR
+    WARMUP   = 3
 
-    err_mean, err_tstar, forecast_year = [], [], []
-    for n_obs in range(3, len(HALLEY_JD)):
-        jd_known    = HALLEY_JD[:n_obs]
-        mean_P_days = (jd_known[-1] - jd_known[0]) / (n_obs - 1)
-        actual_jd   = HALLEY_JD[n_obs]
-        err_mean.append((jd_known[-1] + mean_P_days - actual_jd) / JD_PER_YR)
-        err_tstar.append((jd_known[-1] + T15_days   - actual_jd) / JD_PER_YR)
-        forecast_year.append(HALLEY_YEARS[n_obs])
+    def jd_to_yr(jd):
+        return (jd - 1721045.0) / JD_PER_YR
 
-    err_mean  = np.array(err_mean)
-    err_tstar = np.array(err_tstar)
+    yr_float = [jd_to_yr(j) for j in HALLEY_JD]
 
-    tstar_wins = np.sum(np.abs(err_tstar) < np.abs(err_mean))
-    mean_wins  = np.sum(np.abs(err_mean)  < np.abs(err_tstar))
-    n_total    = len(err_mean)
+    x_obs, err_mean_list, err_t15_list = [], [], []
+    for n in range(WARMUP, len(HALLEY_JD)):
+        known    = HALLEY_JD[:n]
+        mean_p_d = (known[-1] - known[0]) / (n - 1)
+        em = (known[-1] + mean_p_d - HALLEY_JD[n]) / JD_PER_YR
+        et = (known[-1] + T15_days - HALLEY_JD[n]) / JD_PER_YR
+        x_obs.append(yr_float[n])
+        err_mean_list.append(em)
+        err_t15_list.append(et)
 
-    # Color by winner
-    colors = [RED if abs(et) < abs(em) else BLUE
-              for et, em in zip(err_tstar, err_mean)]
+    x_obs        = np.array(x_obs)
+    err_mean_arr = np.array(err_mean_list)
+    err_t15_arr  = np.array(err_t15_list)
 
-    lim = 3.0
+    rms_m  = np.sqrt(np.mean(err_mean_arr**2))
+    rms_t  = np.sqrt(np.mean(err_t15_arr**2))
+    mae_m  = np.mean(np.abs(err_mean_arr))
+    mae_t  = np.mean(np.abs(err_t15_arr))
+    wins_t = int(np.sum(np.abs(err_t15_arr) < np.abs(err_mean_arr)))
+    n_tot  = len(err_mean_arr)
 
-    fig, ax = plt.subplots(figsize=(7, 7), facecolor=BG)
-    fig.subplots_adjust(left=0.13, right=0.95, top=0.88, bottom=0.12)
+    fig, ax = plt.subplots(figsize=(11, 5.5), facecolor=BG)
+    fig.subplots_adjust(left=0.08, right=0.97, top=0.87, bottom=0.16)
 
-    # Diagonal y = x  (equal error)
-    ax.plot([-lim, lim], [-lim, lim], color=GREY, lw=1.0,
-            ls='--', alpha=0.6, zorder=1, label='Equal error')
+    ax.axhline(0, color=FG, lw=0.9, alpha=0.30, zorder=2)
+    ax.axhspan(-1, 1, alpha=0.04, color=BLUE, zorder=1)
 
-    # Shade regions
-    ax.fill_between([-lim, lim], [-lim, lim], [lim, lim],
-                    color=BLUE, alpha=0.04, zorder=0)   # running mean better
-    ax.fill_between([-lim, lim], [-lim, -lim], [-lim, lim],
-                    color=RED, alpha=0.04, zorder=0)    # T*/15 better
+    ax.plot(x_obs, err_mean_arr, 'o-',  color=BLUE, lw=1.5, ms=4.5,
+            zorder=4, label='Running mean')
+    ax.plot(x_obs, err_t15_arr,  's--', color=RED,  lw=1.5, ms=4.5,
+            zorder=4, label=r'$T^*/15$ (no Halley data)')
 
-    # Region labels — only "Running mean better" top-left; score replaces bottom label
-    ax.text(-2.7,  2.5, 'Running mean\nbetter', color=BLUE,
-            fontsize=9, alpha=0.7, ha='left')
+    tick_pos  = x_obs[::3]
+    tick_labs = [f'{v:.1f}' for v in tick_pos]
+    ax.set_xticks(tick_pos)
+    ax.set_xticklabels(tick_labs, rotation=40, ha='right', fontsize=8)
 
-    # Scatter points
-    for i, (em, et, yr, c) in enumerate(
-            zip(err_mean, err_tstar, forecast_year, colors)):
-        ax.scatter(em, et, color=c, s=55, zorder=4, alpha=0.85)
-
-    # Zero lines
-    ax.axhline(0, color=FG, lw=0.6, alpha=0.25, zorder=2)
-    ax.axvline(0, color=FG, lw=0.6, alpha=0.25, zorder=2)
-
-    # Score annotation — bottom right (T*/15 better zone)
-    bias_days = (P_EXACT - mean_P) * JD_PER_YR  # +7.4 days
-    score_text = (f'$T^*/15$ wins: {tstar_wins}/{n_total} ({100*tstar_wins/n_total:.0f}%)\n'
-                  f'Running mean wins: {mean_wins}/{n_total} ({100*mean_wins/n_total:.0f}%)\n'
-                  f'Asymmetry: $T^*/15$ is {bias_days:.1f} d later\n'
-                  f'than running mean — wins when\n'
-                  f'the comet arrives early.')
-    ax.text(0.97, 0.03, score_text, transform=ax.transAxes,
-            fontsize=8.5, va='bottom', ha='right', color=FG,
-            bbox=dict(boxstyle='round,pad=0.5', fc='#161b22',
-                      ec=GRID, alpha=0.9))
-
-    ax.set_xlim(-lim, lim)
-    ax.set_ylim(-lim, lim)
-    ax.set_aspect('equal')
-    ax.set_xlabel('Running mean error (yr)')
-    ax.set_ylabel('$T^*/15$ error (yr)')
-    ax.set_title('One-step-ahead prediction: error comparison\n'
-                 '($T^*/15$ uses no Halley data)')
+    ax.set_ylabel('Prediction error (yr)\n[predicted\u2212observed]', fontsize=10)
+    ax.set_xlabel('Observed perihelion year', fontsize=10)
+    ax.set_ylim(-3.8, 3.8)
     ax.grid(True, zorder=1)
     ax.tick_params(which='both', direction='in')
 
-    # Legend for colors
-    ax.scatter([], [], color=RED,  s=55, label=f'$T^*/15$ closer ({tstar_wins})')
-    ax.scatter([], [], color=BLUE, s=55, label=f'Running mean closer ({mean_wins})')
-    ax.legend(loc='upper center', fontsize=9,
-              facecolor='#161b22', edgecolor=GRID, framealpha=0.9)
+    stat = (f'Running mean  \u2014 RMS {rms_m:.2f} yr,  MAE {mae_m:.2f} yr\n'
+            f'$T^*/15$ fixed \u2014 RMS {rms_t:.2f} yr,  MAE {mae_t:.2f} yr\n'
+            f'$T^*/15$ closer: {wins_t}/{n_tot} forecasts\n'
+            f'Warm-up: first {WARMUP} apparitions '
+            f'(through {yr_float[WARMUP-1]:.1f})')
+    ax.text(0.01, 0.97, stat, transform=ax.transAxes,
+            fontsize=8.5, va='top', ha='left', color=FG, family='monospace',
+            bbox=dict(boxstyle='round,pad=0.45', fc=BG, ec=GRID, alpha=0.92))
 
-    save(fig, 'fig5_rolling_scatter')
+    ax.legend(loc='upper right', fontsize=9,
+              facecolor=BG, edgecolor=GRID, framealpha=0.92)
+
+    ax.set_title(
+        r'One-step-ahead perihelion predictions: error relative to observation'
+        '\n'
+        r'Both predictors bounded within $\pm$3 yr across 2,200 yr --- no secular drift',
+        fontsize=10, pad=6)
+
+    save(fig, 'fig5_rolling_prediction')
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -470,7 +466,7 @@ if __name__ == '__main__':
         ('Fig 2 — Cumulative perturbation sum',  fig2),
         ('Fig 3 — Angular residues comparison',  fig4),
         ('Fig 4 — Arithmetic landscape',         fig6),
-        ('Fig 5 — Rolling prediction scatter',   fig5),
+        ('Fig 5 — Rolling prediction errors',    fig5),
     ]
 
     print('Generating figures for Halley / 1151-yr paper')
@@ -480,4 +476,4 @@ if __name__ == '__main__':
         fn()
 
     print('\n' + '=' * 50)
-    print('Done. 10 files written (5 × PDF + 5 × PNG).')
+    print('Done. 10 files written (5 x PDF + 5 x PNG).')
