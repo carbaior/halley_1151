@@ -62,18 +62,18 @@ sigma_P   = np.std(delta_P, ddof=1)
 # SHARED STYLE
 # ═══════════════════════════════════════════════════════════════════════════════
 
-BG    = '#0d1117'
-FG    = '#c9d1d9'
-GRID  = '#21262d'
-BLUE  = '#58a6ff'
-RED   = '#f85149'
-GREY  = '#8b949e'
-GREEN = '#3fb950'
-AMBER = '#d29922'
+BG    = '#ffffff'
+FG    = '#1a1a2e'
+GRID  = '#cccccc'
+BLUE  = '#1a6bbf'
+RED   = '#c0392b'
+GREY  = '#666666'
+GREEN = '#1e8449'
+AMBER = '#b7770d'
 
 plt.rcParams.update({
     'figure.facecolor': BG,  'axes.facecolor': BG,
-    'axes.edgecolor':   GRID, 'axes.labelcolor': FG,
+    'axes.edgecolor':   '#999999', 'axes.labelcolor': FG,
     'xtick.color':      GREY, 'ytick.color':     GREY,
     'text.color':       FG,   'grid.color':      GRID,
     'grid.linewidth':   0.5,  'font.size':       11,
@@ -82,7 +82,7 @@ plt.rcParams.update({
 
 def save(fig, stem):
     for ext in ('pdf', 'png'):
-        fig.savefig(f'{stem}.{ext}', dpi=200, facecolor=BG)
+        fig.savefig(f'{stem}.{ext}', dpi=200, facecolor=BG, bbox_inches='tight')
     print(f'  Saved: {stem}.pdf / .png')
     plt.close(fig)
 
@@ -122,7 +122,7 @@ def fig1():
     ax.set_ylabel('Running mean period (yr)')
     ax.set_title("Convergence of Halley's mean orbital period toward $T^*/15$")
     ax.legend(loc='upper right', fontsize=10,
-              facecolor='#161b22', edgecolor=GRID, framealpha=0.9)
+              facecolor=BG, edgecolor=GRID, framealpha=0.9)
     ax.grid(True, zorder=1)
     ax.tick_params(which='both', direction='in')
 
@@ -169,7 +169,7 @@ def fig2():
     ax.set_ylabel(r'Cumulative $\sum \delta P_i$ (days)')
     ax.set_title('Perturbation cancellation over orbital cycles')
     ax.legend(loc='upper left', fontsize=9.5,
-              facecolor='#161b22', edgecolor=GRID, framealpha=0.9)
+              facecolor=BG, edgecolor=GRID, framealpha=0.9)
     ax.grid(True, zorder=0)
     ax.tick_params(which='both', direction='in')
 
@@ -247,7 +247,7 @@ def fig4():
         mpatches.Patch(color='#484f58', label='Uranus (non-participant)'),
     ]
     ax.legend(handles=legend_handles, loc='upper right', fontsize=9,
-              facecolor='#161b22', edgecolor=GRID, framealpha=0.9)
+              facecolor=BG, edgecolor=GRID, framealpha=0.9)
 
     save(fig, 'fig3_residues_comparison')
 
@@ -315,7 +315,7 @@ def fig6():
     ax1.set_ylabel('Angular residue $|\\Delta\\theta|$ (°)')
     ax1.set_title('Full HTC range [20–200 yr]')
     ax1.legend(loc='upper right', fontsize=9,
-               facecolor='#161b22', edgecolor=GRID, framealpha=0.9)
+               facecolor=BG, edgecolor=GRID, framealpha=0.9)
     ax1.grid(True, zorder=1)
     ax1.tick_params(which='both', direction='in')
 
@@ -355,7 +355,7 @@ def fig6():
     ax2.set_ylabel('Angular residue $|\\Delta\\theta|$ (°)')
     ax2.set_title("Zoom: Halley's neighbourhood [60–90 yr]")
     ax2.legend(loc='upper right', fontsize=8.5,
-               facecolor='#161b22', edgecolor=GRID, framealpha=0.9)
+               facecolor=BG, edgecolor=GRID, framealpha=0.9)
     ax2.grid(True, zorder=1)
     ax2.tick_params(which='both', direction='in')
 
@@ -366,7 +366,7 @@ def fig6():
              f'≈ one every {180/n_min_full:.1f} yr of period',
              transform=ax1.transAxes, fontsize=8.5, va='top',
              color=GREY, bbox=dict(boxstyle='round,pad=0.4',
-                                   fc='#161b22', ec=GRID, alpha=0.85))
+                                   fc=BG, ec=GRID, alpha=0.85))
 
     fig.suptitle('Arithmetic landscape of angular residues at $T^* = 1{,}151$ yr',
                  fontsize=12, y=0.97)
